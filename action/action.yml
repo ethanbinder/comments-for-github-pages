@@ -1,0 +1,38 @@
+# Composite-action wrapper around scripts/sync-comments.mjs, for consumers on
+# github.com (or GHES with GitHub Connect) who prefer
+#   uses: ethanbinder/comments-for-github-pages/action@v1
+# over vendoring the script. On GitHub Enterprise Server WITHOUT GitHub
+# Connect, cross-instance `uses:` does not resolve — use the copy-paste
+# templates in templates/ instead.
+
+name: "Sync GitHub Discussions comments"
+description: >-
+  Fetch GitHub Discussion comments and write one JSON file per page for the
+  comments-for-github-pages widget. No dependencies; needs discussions:read.
+author: ethanbinder
+
+inputs:
+  repo:
+    description: "owner/name of the repo whose Discussions hold the comments"
+    default: ${{ github.repository }}
+  category:
+    description: "Discussion category name (case-insensitive)"
+    required: true
+  output-dir:
+    description: "Directory to write <slug>.json files into"
+    default: "./comments"
+  token:
+    description: "Token with discussions:read on the repo"
+    default: ${{ github.token }}
+
+runs:
+  using: composite
+  steps:
+    - name: Sync comments
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        INPUT_REPO: ${{ inputs.repo }}
+        INPUT_CATEGORY: ${{ inputs.category }}
+        INPUT_OUTPUT_DIR: ${{ inputs.output-dir }}
+      run: node "${{ github.action_path }}/../scripts/sync-comments.mjs"
