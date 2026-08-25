@@ -16,7 +16,8 @@
  *   data-data-url="/comments"            base path of the synced JSON (default "/comments")
  *   data-target="#comments"              CSS selector (default "#comments"; else renders after this script)
  *   data-theme="auto"                    "auto" (default) | "light" | "dark"
- *   data-server-url="https://github.com" GitHub host, used only for the new-discussion link
+ *   data-server-url="https://github.com" GitHub host; new-discussion link + trusted image host
+ *   data-img-hosts=""                    optional — extra comma-separated hosts images may load from
  * ></script>
  */
 (() => {
@@ -35,6 +36,7 @@
     target: script.dataset.target || "#comments",
     theme: script.dataset.theme || "auto",
     serverUrl: (script.dataset.serverUrl || "https://github.com").replace(/\/+$/, ""),
+    imgHosts: (script.dataset.imgHosts || "").toLowerCase().split(",").map((s) => s.trim()).filter(Boolean),
   };
 
   // --- slug algorithm (spec: docs/json-schema.md; keep identical to scripts/sync-comments.mjs) ---
@@ -72,7 +74,7 @@
   // GHES sanitizers. Unknown elements are unwrapped (children kept);
   // dangerous ones are dropped entirely; only allowlisted attributes survive.
   const DROP_TAGS = new Set(["script", "style", "iframe", "object", "embed", "link", "meta", "base", "form", "textarea", "select", "button", "video", "audio", "source", "svg", "math", "template", "slot", "dialog"]);
-  const ALLOW_TAGS = new Set(["p", "br", "a", "img", "pre", "code", "em", "strong", "b", "i", "del", "ins", "blockquote", "ul", "ol", "li", "h1", "h2", "h3", "h4", "h5", "h6", "table", "thead", "tbody", "tfoot", "tr", "th", "td", "hr", "details", "summary", "sup", "sub", "input", "span", "div", "g-emoji", "kbd", "picture"]);
+  const ALLOW_TAGS = new Set(["p", "br", "a", "img", "pre", "code", "em", "strong", "b", "i", "del", "ins", "blockquote", "ul", "ol", "li", "h1", "h2", "h3", "h4", "h5", "h6", "table", "thead", "tbody", "tfoot", "tr", "th", "td", "hr", "details", "summary", "sup", "sub", "input", "span", "div", "g-emoji", "kbd"]);
   const GLOBAL_ATTRS = new Set(["title", "dir", "align", "start", "colspan", "rowspan"]);
   const CLASS_PREFIXES = ["pl-", "highlight", "snippet-clipboard", "notranslate", "contains-task-list", "task-list-item", "markdown-", "email-"];
 
@@ -81,6 +83,29 @@
       const url = new URL(value, document.baseURI);
       const ok = url.protocol === "http:" || url.protocol === "https:" || (allowMailto && url.protocol === "mailto:");
       return ok ? value : null;
+    } catch {
+      return null;
+    }
+  }
+
+  // Images are stricter than links: a link only loads when clicked, but an
+  // <img> fires a request the moment the page renders, so a commenter could
+  // otherwise embed a tracking pixel on a third-party host. Only load images
+  // from trusted hosts: the site's own origin, the GitHub instance
+  // (data-server-url), GitHub's image proxy/avatar hosts
+  // (*.githubusercontent.com — GitHub rewrites all embedded markdown images
+  // to it), and any extra hosts the SITE AUTHOR opts into via data-img-hosts.
+  const IMG_HOSTS = ["githubusercontent.com", ...cfg.imgHosts];
+  try {
+    IMG_HOSTS.push(new URL(cfg.serverUrl).hostname.toLowerCase());
+  } catch { /* unparseable data-server-url; defaults still apply */ }
+  function safeImgUrl(value) {
+    try {
+      const url = new URL(value, document.baseURI);
+      if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+      if (url.origin === location.origin) return value;
+      const host = url.hostname.toLowerCase();
+      return IMG_HOSTS.some((allowed) => host === allowed || host.endsWith("." + allowed)) ? value : null;
     } catch {
       return null;
     }
@@ -110,7 +135,7 @@
           const url = safeUrl(value, true);
           if (url) el.setAttribute("href", url);
         } else if (name === "src" && tag === "img") {
-          const url = safeUrl(value, false);
+          const url = safeImgUrl(value);
           if (url) el.setAttribute("src", url);
         } else if ((name === "alt" || name === "width" || name === "height") && tag === "img") {
           el.setAttribute(name, value);
@@ -131,7 +156,12 @@
       }
       if (tag === "img") {
         el.setAttribute("loading", "lazy");
-        if (!el.hasAttribute("src")) continue; // img with no safe src is useless
+        if (!el.hasAttribute("src")) {
+          // Blocked or missing src: keep the meaning (alt text), never the request.
+          const alt = el.getAttribute("alt");
+          if (alt) parent.appendChild(h("span", { class: "cfgp-muted", text: `[image: ${alt}]` }));
+          continue;
+        }
       }
       sanitizeInto(node, el);
       parent.appendChild(el);
@@ -174,7 +204,7 @@
   }
 
   function reactionPills(reactions) {
-    const entries = Object.entries(reactions || {}).filter(([k]) => EMOJI[k]);
+    const entries = Object.entries(reactions || {}).filter(([k]) => Object.hasOwn(EMOJI, k));
     if (!entries.length) return null;
     const wrap = h("span", { class: "cfgp-reactions" });
     for (const [content, count] of entries) {
@@ -187,7 +217,7 @@
     const card = h("article", { class: "cfgp-comment" + (isReply ? " cfgp-reply" : "") });
     const head = h("header", { class: "cfgp-head" });
     if (comment.author) {
-      const avatarUrl = safeUrl(comment.author.avatarUrl, false);
+      const avatarUrl = safeImgUrl(comment.author.avatarUrl);
       head.appendChild(
         avatarUrl
           ? h("img", { class: "cfgp-avatar", src: avatarUrl, alt: "", loading: "lazy" })
@@ -283,7 +313,7 @@
   function renderEmpty(root, term, discussionUrl) {
     root.appendChild(h("div", { class: "cfgp-header", text: "Comments" }));
     root.appendChild(h("p", { class: "cfgp-muted", text: "No comments yet." }));
-    const href = discussionUrl ? safeUrl(discussionUrl, false) : cfg.repo ? newDiscussionUrl(term) : null;
+    const href = safeUrl(discussionUrl ? discussionUrl : cfg.repo ? newDiscussionUrl(term) : "", false);
     if (href) {
       const footer = h("div", { class: "cfgp-footer" });
       footer.appendChild(h("a", { class: "cfgp-btn", href, target: "_blank", rel: "noopener noreferrer", text: "Start the discussion →" }));
@@ -308,18 +338,21 @@
   }
 
   async function run() {
-    const root = mount();
-    const term = cfg.mapping === "term" && cfg.term ? cfg.term : location.pathname;
+    let root;
     try {
+      root = mount();
+      const term = cfg.mapping === "term" && cfg.term ? cfg.term : location.pathname;
       const res = await fetch(`${cfg.dataUrl}/${termToSlug(term)}.json`, { headers: { Accept: "application/json" } });
       if (res.status === 404) return renderEmpty(root, term);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      if (!data || data.schemaVersion > MAX_SCHEMA_VERSION) throw new Error("unsupported comments data version");
+      if (!data || !Number.isInteger(data.schemaVersion) || data.schemaVersion > MAX_SCHEMA_VERSION) {
+        throw new Error("unsupported comments data version");
+      }
       if (!data.comments.length) return renderEmpty(root, term, data.discussion.locked ? null : data.discussion.url);
       renderThread(root, data);
     } catch (err) {
-      root.appendChild(h("p", { class: "cfgp-error", text: "Comments could not be loaded." }));
+      if (root) root.appendChild(h("p", { class: "cfgp-error", text: "Comments could not be loaded." }));
       console.error("comments-for-github-pages:", err);
     }
   }
