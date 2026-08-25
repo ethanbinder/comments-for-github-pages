@@ -29,7 +29,7 @@
  */
 
 import { parseArgs } from "node:util";
-import { mkdir, readdir, unlink, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 const SCHEMA_VERSION = 1;
@@ -353,11 +353,25 @@ async function main() {
     console.error(`sync-comments: wrote ${filename} (${totalComments} comment(s))`);
   }
 
-  // Full resync: drop files for discussions that no longer exist in the category.
+  // Full resync: drop files for discussions that no longer exist in the
+  // category. Safety guard: only delete a file this script verifiably wrote
+  // (it parses and carries our schema markers), so pointing --out at a
+  // directory containing unrelated .json files never destroys them.
   for (const entry of await readdir(outDir)) {
-    if (entry.endsWith(".json") && !written.has(entry)) {
-      await unlink(join(outDir, entry));
+    if (!entry.endsWith(".json") || written.has(entry)) continue;
+    const path = join(outDir, entry);
+    let ours = false;
+    try {
+      const parsed = JSON.parse(await readFile(path, "utf8"));
+      ours = Number.isInteger(parsed?.schemaVersion) && typeof parsed?.term === "string" && parsed?.discussion && Array.isArray(parsed?.comments);
+    } catch {
+      /* not ours */
+    }
+    if (ours) {
+      await unlink(path);
       console.error(`sync-comments: deleted stale ${entry}`);
+    } else {
+      console.error(`sync-comments: leaving unrecognized ${entry} alone`);
     }
   }
   console.error(`sync-comments: done — ${written.size} file(s) in ${outDir}`);
