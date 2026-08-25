@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-25T20:50:38.697Z",
+  "term": "/index",
+  "discussion": {
+    "number": 1,
+    "url": "https://github.com/ethanbinder/comments-for-github-pages/discussions/1",
+    "title": "/index",
+    "locked": false,
+    "totalComments": 2,
+    "reactions": {
+      "HEART": 1
+    }
+  },
+  "comments": [
+    {
+      "id": "DC_kwDOUEO8Z84BFQA7",
+      "url": "https://github.com/ethanbinder/comments-for-github-pages/discussions/1#discussioncomment-18153531",
+      "author": {
+        "login": "ethanbinder",
+        "url": "https://github.com/ethanbinder",
+        "avatarUrl": "https://avatars.githubusercontent.com/u/255760986?u=55fa0ce00f6b8f210595b5020d03002419a0400a&v=4"
+      },
+      "createdAt": "2026-08-25T20:50:30Z",
+      "editedAt": null,
+      "bodyHTML": "<p dir=\"auto\">First! This comment was synced to the static site by the sync script. It has <strong>markdown</strong>, <code class=\"notranslate\">code</code>, and a link to <a href=\"https://pages.github.com\">GitHub Pages</a>.</p>",
+      "upvotes": 1,
+      "reactions": {
+        "THUMBS_UP": 1
+      },
+      "replies": [
+        {
+          "id": "DC_kwDOUEO8Z84BFQA8",
+          "url": "https://github.com/ethanbinder/comments-for-github-pages/discussions/1#discussioncomment-18153532",
+          "author": {
+            "login": "ethanbinder",
+            "url": "https://github.com/ethanbinder",
+            "avatarUrl": "https://avatars.githubusercontent.com/u/255760986?u=55fa0ce00f6b8f210595b5020d03002419a0400a&v=4"
+          },
+          "createdAt": "2026-08-25T20:50:31Z",
+          "editedAt": null,
+          "bodyHTML": "<p dir=\"auto\">A threaded reply, to prove nested rendering works.</p>",
+          "upvotes": 0,
+          "reactions": {}
+        }
+      ],
+      "repliesTruncated": false
+    }
+  ]
+}
