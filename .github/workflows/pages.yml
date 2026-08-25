@@ -1,0 +1,53 @@
+# Dogfood: deploy this repo's own demo site to GitHub Pages with its
+# Discussion comments synced in. This is the artifact-mode template
+# (templates/sync-comments-artifact-pages.yml) applied to the demo/ site.
+
+name: Sync comments & deploy demo Pages
+
+on:
+  discussion:
+    types: [created, edited, deleted, category_changed, transferred]
+  discussion_comment:
+    types: [created, edited, deleted]
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: "17 4 * * *" # daily drift-repair fallback
+
+permissions:
+  contents: read
+  discussions: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: sync-comments
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build demo site
+        run: |
+          mkdir -p _site/assets
+          cp demo/*.html _site/
+          cp widget/comments.js _site/assets/
+
+      - name: Sync Discussion comments
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/sync-comments.mjs --category General --out _site/comments
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

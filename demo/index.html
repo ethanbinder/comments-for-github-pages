@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>comments-for-github-pages — live demo</title>
+  <style>
+    body { max-width: 44rem; margin: 2rem auto; padding: 0 1rem;
+           font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+           color: #1f2328; background: #ffffff; }
+    @media (prefers-color-scheme: dark) { body { color: #f0f6fc; background: #0d1117; } a { color: #4493f8; } }
+    hr { border: 0; border-top: 1px solid #8884; margin: 2rem 0; }
+  </style>
+</head>
+<body>
+  <h1>comments-for-github-pages</h1>
+  <p>
+    This page is a plain static site on GitHub Pages, and the comment thread below is a
+    <a href="https://github.com/ethanbinder/comments-for-github-pages/discussions">GitHub Discussion</a> —
+    synced to static JSON by a GitHub Actions workflow and rendered by a single-file widget.
+    No server, no third-party service, no tokens in the browser.
+  </p>
+  <p>
+    Post a comment through the "Join the discussion" button and it will appear here
+    automatically after the sync workflow redeploys the site (about a minute).
+    See the <a href="second-page.html">second page</a> for the empty state and per-page mapping.
+  </p>
+  <hr>
+  <div id="comments"></div>
+  <script src="assets/comments.js" defer
+    data-repo="ethanbinder/comments-for-github-pages"
+    data-category="General"
+    data-mapping="term"
+    data-term="/index"
+    data-data-url="./comments"></script>
+</body>
+</html>
