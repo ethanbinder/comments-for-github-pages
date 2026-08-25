@@ -1,0 +1,6 @@
+node_modules/
+.DS_Store
+
+# Generated locally by the sync script during development/testing
+demo/comments/
+/tmp-out/
