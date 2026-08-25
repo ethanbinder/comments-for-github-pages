@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-25T00:00:00.000Z",
+  "term": "/xss-test",
+  "discussion": {
+    "number": 999,
+    "url": "https://github.com/ethanbinder/comments-for-github-pages/discussions/1",
+    "title": "/xss-test",
+    "locked": false,
+    "totalComments": 3,
+    "reactions": {}
+  },
+  "comments": [
+    {
+      "id": "XSS_1",
+      "url": "https://github.com/ethanbinder/comments-for-github-pages/discussions/1",
+      "author": { "login": "mallory", "url": "javascript:alert('author-url')", "avatarUrl": "javascript:alert('avatar')" },
+      "createdAt": "2026-08-25T00:00:00Z",
+      "editedAt": null,
+      "bodyHTML": "<p>Adversarial fixture — every vector below must be neutralized.</p><script>window.__xss1=true;alert('script tag')</script><img src=x onerror=\"window.__xss2=true;alert('onerror')\"><a href=\"javascript:alert('js-href')\">javascript: link</a><a href=\"data:text/html,<script>alert(1)</script>\">data: link</a><iframe src=\"https://example.com\"></iframe><form action=\"https://evil.example\"><input type=\"text\" name=\"password\"></form><p style=\"position:fixed;inset:0;background:red\" onclick=\"window.__xss3=true\">styled + onclick paragraph</p><svg onload=\"window.__xss4=true\"><circle r=\"40\"/></svg><math><mtext></mtext></math><details open ontoggle=\"window.__xss5=true\"><summary>details ontoggle</summary>hidden</details><object data=\"https://evil.example\"></object><embed src=\"https://evil.example\"><p>Legit content survives: <strong>bold</strong>, <code>code</code>, <a href=\"https://example.com\">safe link</a>, task list:</p><ul class=\"contains-task-list\"><li class=\"task-list-item\"><input type=\"checkbox\" checked> done item</li></ul>",
+      "upvotes": 0,
+      "reactions": {},
+      "replies": [
+        {
+          "id": "XSS_2",
+          "url": "https://github.com/ethanbinder/comments-for-github-pages/discussions/1",
+          "author": null,
+          "createdAt": "2026-08-25T00:01:00Z",
+          "editedAt": "2026-08-25T00:02:00Z",
+          "bodyHTML": "<p>Ghost-author reply with a <a href=\"vbscript:msgbox(1)\">vbscript link</a> and an <img src=\"data:image/svg+xml,<svg onload='alert(1)'/>\" alt=\"data-uri img\"> that must be stripped.</p>",
+          "upvotes": 0,
+          "reactions": { "EYES": 2 }
+        }
+      ],
+      "repliesTruncated": true
+    }
+  ]
+}
