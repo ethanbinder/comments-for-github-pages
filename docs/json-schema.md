@@ -12,8 +12,8 @@ Implemented identically in `scripts/sync-comments.mjs` (`termToSlug`) and
 and keep the parity fixtures passing.
 
 Input: the *term* — a page pathname like `/blog/post-1/`, a custom string, or
-a full URL (only its pathname is used). The Discussion **title is the term**,
-exactly like giscus pathname mapping.
+a full URL (only its pathname is used). The Discussion **title is the term**:
+a page and a discussion are matched purely by that string.
 
 1. Trim. If the term is a full `http(s)://` URL, keep only its pathname.
 2. Lowercase. Strip any `?query` / `#fragment` suffix.
