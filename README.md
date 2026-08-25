@@ -64,6 +64,14 @@ On github.com you can use the composite action instead of vendoring the script: 
 | `data-server-url` | `https://github.com` | Your GitHub host (set on GitHub Enterprise Server) |
 | `data-img-hosts` | — | Extra comma-separated hosts comment images may load from; by default only your site's origin, the `data-server-url` host, and GitHub's own image hosts are allowed |
 
+## For AI agents
+
+Setting this up is a great task to hand to a coding agent (Claude Code, Codex, etc.). Tell it:
+
+> Use https://github.com/ethanbinder/comments-for-github-pages to add comments to `<owner>/<my-pages-repo>` — follow its AGENTS.md.
+
+[`AGENTS.md`](AGENTS.md) carries the agent contract, and [`docs/agent-setup.md`](docs/agent-setup.md) is the full runbook: inputs to gather, the artifact-vs-branch decision, exact commands, GHES/mirror handling, per-generator snippet placement, a mandatory verification phase, and troubleshooting. It works repo-by-repo, so an agent can roll comments out across any number of Pages sites.
+
 ## Docs
 
 - [Installing on GitHub Enterprise Server](docs/install-ghes.md) — vendoring, GitHub Connect, token permissions
