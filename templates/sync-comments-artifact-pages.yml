@@ -45,6 +45,10 @@ jobs:
       # EDIT: build your site into ./_site. For a plain static site with no
       # build step, a copy is enough (shown). Replace with your generator's
       # build command (jekyll build -d _site, hugo -d _site, etc.).
+      # SECURITY: never copy .git into _site — actions/checkout stores the
+      # job's GITHUB_TOKEN in .git/config, and publishing it would expose a
+      # live (job-scoped) credential on your Pages site. Keep an exclude for
+      # .git in whatever build step you write here.
       - name: Build site
         run: |
           mkdir -p _site
