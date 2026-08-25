@@ -1,0 +1,68 @@
+# comments-for-github-pages — branch-deployed Pages template
+#
+# Use this variant when your Pages site is served from a branch (gh-pages, or
+# main /docs) rather than deployed from an actions artifact. It commits the
+# synced JSON into the pages branch.
+#
+# Copy this file to .github/workflows/sync-comments.yml in your pages repo,
+# and copy scripts/sync-comments.mjs alongside it (vendoring — no cross-repo
+# `uses:` needed, which matters on GitHub Enterprise Server without GitHub
+# Connect). Edit the EDIT-marked spots.
+
+name: Sync comments to Pages branch
+
+on:
+  discussion:
+    types: [created, edited, deleted, category_changed, transferred]
+  discussion_comment:
+    types: [created, edited, deleted]
+  push:
+    branches: [gh-pages] # EDIT: your pages branch
+    paths-ignore:
+      - "comments/**" # loop guard: our own commit must not retrigger us
+  workflow_dispatch:
+  schedule:
+    - cron: "17 4 * * *" # daily drift-repair fallback
+
+# Explicit permissions: overrides restrictive org-level GITHUB_TOKEN defaults.
+permissions:
+  contents: write
+  discussions: read
+
+# Collapse bursts of comment events into one run.
+concurrency:
+  group: sync-comments
+  cancel-in-progress: true
+
+env:
+  PAGES_BRANCH: gh-pages # EDIT: your pages branch
+  OUTPUT_DIR: comments # EDIT: where the JSON lives inside the published site
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.PAGES_BRANCH }}
+
+      # The sync script must be available on the pages branch (vendored), or
+      # check out a second copy of your default branch to get it. EDIT if yours
+      # lives elsewhere.
+      - name: Sync Discussion comments
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # EDIT: --category must match your Discussions category name.
+        run: node scripts/sync-comments.mjs --category Comments --out "$OUTPUT_DIR"
+
+      - name: Commit updated comments
+        run: |
+          if [ -n "$(git status --porcelain -- "$OUTPUT_DIR")" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A "$OUTPUT_DIR"
+            git commit -m "chore: sync discussion comments"
+            git push
+          else
+            echo "No comment changes."
+          fi
