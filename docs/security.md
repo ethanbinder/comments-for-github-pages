@@ -33,6 +33,14 @@ Anyone who can comment can author malicious markdown. Defenses, in order:
    - `href`/`src` must parse as `http:`/`https:` (`mailto:` allowed on
      links); `javascript:`, `data:`, `vbscript:` are dropped — including on
      author profile and avatar URLs.
+   - **Images load only from trusted hosts**: the site's own origin, the
+     configured GitHub host (`data-server-url`), `*.githubusercontent.com`
+     (GitHub proxies all embedded markdown images through it), and any
+     hosts the site author explicitly adds via `data-img-hosts`. A comment
+     embedding an image on any other host — e.g. a tracking pixel that
+     would log visitor IPs — never triggers a request; the image renders
+     as its alt text instead. (Links may still point at third-party sites,
+     but a link only loads when a reader clicks it.)
    - Links get `target="_blank" rel="noopener noreferrer nofollow ugc"`;
      images get `loading="lazy"`; task-list inputs are forced to disabled
      checkboxes.
@@ -82,7 +90,15 @@ Notes: `style-src 'unsafe-inline'` is needed because the widget injects one
 extend `img-src` with your GHES avatar host (e.g.
 `https://github.your-company.com`) when running on Enterprise Server.
 Because the widget makes no cross-origin requests, `connect-src 'self'`
-suffices.
+suffices. The widget already enforces the image-host allowlist itself; the
+CSP is belt-and-braces on top of it.
+
+One more env-var note for auditors: on Actions runners the sync script
+sends its token wherever the runner-set `GITHUB_GRAPHQL_URL` points. That
+variable is set by GitHub's own runner environment (that's how the same
+script works on github.com and GHES without configuration) — but it is the
+one variable that redirects an authenticated request, so treat any workflow
+edit that overrides it as a red flag in review.
 
 ## Reporting
 

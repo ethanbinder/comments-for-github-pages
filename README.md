@@ -16,12 +16,12 @@ your GitHub Pages site  ◀──(redeploy)──  comments/<page-slug>.json
 comments.js widget renders the thread + "Join the discussion →"
 ```
 
-## Why this instead of giscus or utterances?
+## Why this instead of a hosted commenting service?
 
-Those are excellent on the public internet, but they rely on a third-party-hosted backend and OAuth app. This project trades inline posting for **zero infrastructure**:
+Hosted comment widgets rely on someone else's backend and OAuth app. This project trades inline posting for **zero infrastructure**:
 
 - **Runs anywhere GitHub Actions runs** — github.com and GitHub Enterprise Server, including locked-down networks that can't reach outside services.
-- **No third-party service** in the read path: your comments render from JSON hosted on your own Pages origin.
+- **No third-party service, ever**: comments render from JSON on your own Pages origin, and the widget blocks images from untrusted hosts so not even a stray tracking pixel leaves your site.
 - **No client-side tokens, ever.** The widget never calls a GitHub API. The sync uses the built-in `GITHUB_TOKEN` with `discussions: read` only.
 - **No dependencies, no build step.** One Node script, one browser file. Install by copying three files.
 - Comments live in GitHub Discussions: native moderation, reactions, threading, and full markdown.
@@ -62,6 +62,7 @@ On github.com you can use the composite action instead of vendoring the script: 
 | `data-target` | `#comments` | Where to render |
 | `data-theme` | `auto` | `auto` / `light` / `dark`; retheme via `--cfgp-*` CSS variables |
 | `data-server-url` | `https://github.com` | Your GitHub host (set on GitHub Enterprise Server) |
+| `data-img-hosts` | — | Extra comma-separated hosts comment images may load from; by default only your site's origin, the `data-server-url` host, and GitHub's own image hosts are allowed |
 
 ## Docs
 
